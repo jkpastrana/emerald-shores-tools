@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emerald Shores Collection — Transaction Desk</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0B7A63;--teal-dark:#085549;--teal-light:#E1F5EE;
+    --gold:#C8973A;--gold-light:#FBF4E8;--sand:#F7F4EF;
+    --dark:#1A2B2A;--text:#1f2937;--muted:#6b7280;--border:#e5e7eb;
+    --bg:#fff;--bg2:#f9fafb;--red:#dc2626;--amber:#d97706;--green:#16a34a;
+    --radius:12px;--radius-sm:8px;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--sand);color:var(--text);min-height:100vh}
+  a{color:var(--teal)}
+  /* SETUP */
+  #setup{max-width:480px;margin:60px auto;background:var(--bg);border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  .setup-head{background:var(--dark);padding:28px 32px;text-align:center}
+  .setup-logo{color:#fff;font-size:18px;font-weight:600;letter-spacing:.02em}
+  .setup-logo span{color:var(--gold)}
+  .setup-sub{color:rgba(255,255,255,.55);font-size:13px;margin-top:4px}
+  .setup-body{padding:28px 32px}
+  .setup-body h2{font-size:16px;margin-bottom:6px}
+  .setup-body p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+  .inp{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;outline:none;transition:border-color .15s;font-family:inherit}
+  .inp:focus{border-color:var(--teal)}
+  .keyinp{font-family:monospace}
+  .btn{background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+  .btn:hover{background:var(--teal-dark)}
+  .btn.full{width:100%;padding:12px;margin-top:12px}
+  .btn.gold{background:var(--gold)}.btn.gold:hover{filter:brightness(.94)}
+  .btn.ghost{background:transparent;color:var(--teal);border:1.5px solid var(--border)}
+  .btn.ghost:hover{background:var(--bg2)}
+  .btn.sm{padding:7px 12px;font-size:12.5px}
+  .note{margin-top:14px;font-size:11px;color:var(--muted);background:var(--bg2);border-radius:var(--radius-sm);padding:10px 12px;line-height:1.6}
+  /* APP */
+  #app{display:none}
+  .topbar{background:var(--dark);color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+  .topbar .brand{font-size:15px;font-weight:600;letter-spacing:.02em}
+  .topbar .brand span{color:var(--gold)}
+  .topbar .brand small{display:block;font-weight:400;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.06em;text-transform:uppercase}
+  .topbar-actions{display:flex;gap:8px;align-items:center}
+  .top-link{color:rgba(255,255,255,.7);font-size:12.5px;text-decoration:none;padding:6px 10px;border-radius:6px}
+  .top-link:hover{background:rgba(255,255,255,.08);color:#fff}
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 60px;display:grid;grid-template-columns:320px 1fr;gap:20px}
+  @media(max-width:860px){.wrap{grid-template-columns:1fr}}
+  .panel{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .panel-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .panel-head h3{font-size:14px;font-weight:700}
+  .list{max-height:70vh;overflow:auto}
+  .deal{padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+  .deal:hover{background:var(--bg2)}
+  .deal.active{background:var(--teal-light);border-left:3px solid var(--teal);padding-left:13px}
+  .deal .addr{font-weight:600;font-size:13.5px}
+  .deal .cli{font-size:12px;color:var(--muted);margin-top:2px}
+  .deal .row2{display:flex;align-items:center;justify-content:space-between;margin-top:7px}
+  .pill{display:inline-block;font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:20px;background:var(--teal-light);color:var(--teal-dark)}
+  .pill.gold{background:var(--gold-light);color:#8a6420}
+  .pill.red{background:#fee2e2;color:#991b1b}
+  .pill.green{background:#dcfce7;color:#166534}
+  .pill.amber{background:#fef3c7;color:#92400e}
+  .due{font-size:11px;color:var(--muted)}
+  .due.warn{color:var(--red);font-weight:600}
+  /* detail */
+  .detail-head{padding:18px 20px;border-bottom:1px solid var(--border)}
+  .detail-head .addr{font-size:19px;font-weight:700;color:var(--dark)}
+  .detail-head .meta{font-size:13px;color:var(--muted);margin-top:3px}
+  .stages{display:flex;gap:6px;padding:16px 20px;flex-wrap:wrap;background:var(--bg2);border-bottom:1px solid var(--border)}
+  .stage{flex:1;min-width:84px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:9px 4px;border-radius:8px;background:#fff;border:1px solid var(--border);cursor:pointer;position:relative}
+  .stage.done{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .stage.current{background:var(--gold);color:#fff;border-color:var(--gold);box-shadow:0 2px 8px rgba(200,151,58,.35)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px 20px}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+  .field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+  .field .val{font-size:14px}
+  .dates{padding:0 20px 8px}
+  .dtitle{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:14px 0 8px}
+  .drow{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:7px;font-size:13px}
+  .drow .dl{font-weight:600}
+  .drow .dd{color:var(--muted)}
+  .drow.overdue{border-color:#fecaca;background:#fef2f2}
+  .drow.overdue .dd{color:var(--red);font-weight:600}
+  .drow.soon{border-color:#fde68a;background:#fffbeb}
+  .ai{padding:18px 20px;border-top:1px solid var(--border);margin-top:8px}
+  .ai h4{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .ai h4 .dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
+  .ai-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .ai-out{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;min-height:60px;display:none}
+  .ai-out.show{display:block}
+  .ai-out .spin{color:var(--muted);font-style:italic}
+  .ai-bar{display:none;justify-content:flex-end;gap:8px;margin-top:8px}
+  .ai-bar.show{display:flex}
+  .empty{padding:60px 24px;text-align:center;color:var(--muted)}
+  .empty .big{font-size:40px;margin-bottom:10px}
+  /* modal */
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;align-items:center;justify-content:center;padding:16px}
+  .modal.show{display:flex}
+  .modal-card{background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
+  .modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .modal-head h3{font-size:15px}
+  .modal-body{padding:18px 20px}
+  .modal-body .field{margin-bottom:13px}
+  .x{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
+  .foot{max-width:1180px;margin:0 auto;padding:0 18px 40px;font-size:11.5px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup">
+  <div class="setup-head">
+    <div class="setup-logo">Emerald Shores <span>Collection</span></div>
+    <div class="setup-sub">TRANSACTION DESK</div>
+  </div>
+  <div class="setup-body">
+    <h2>Connect your AI</h2>
+    <p>The Transaction Desk uses Claude to draft client updates, deadline task lists, and co-op/lender emails. Paste your Anthropic API key to turn those on. Your key is stored only in this browser and never leaves your device except to call Anthropic directly.</p>
+    <input id="keyInput" class="inp keyinp" type="password" placeholder="sk-ant-..." autocomplete="off">
+    <button class="btn full" onclick="saveKey()">Enter the Desk</button>
+    <button class="btn ghost full" style="margin-top:8px" onclick="skipKey()">Skip for now (tracking only, no AI)</button>
+    <div class="note">Get a key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. You can add or change it any time from the header.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="brand">Emerald Shores <span>Collection</span><small>Transaction Desk</small></div>
+    <div class="topbar-actions">
+      <a class="top-link" href="./index.html">All Tools</a>
+      <button class="btn gold sm" onclick="openNew()">+ New Transaction</button>
+      <button class="btn ghost sm" style="color:#fff;border-color:rgba(255,255,255,.25)" onclick="editKey()">API Key</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT: deal list -->
+    <div>
+      <div class="panel">
+        <div class="panel-head"><h3>Transactions</h3><span id="dealCount" class="pill">0</span></div>
+        <div id="dealList" class="list"></div>
+      </div>
+    </div>
+    <!-- RIGHT: detail -->
+    <div class="panel">
+      <div id="detail"></div>
+    </div>
+  </div>
+  <div class="foot">Emerald Shores Collection · Transaction Desk — data is saved in this browser. Export or back up important files in dotloop / Follow Up Boss.</div>
+</div>
+
+<!-- NEW / EDIT MODAL -->
+<div id="modal" class="modal">
+  <div class="modal-card">
+    <div class="modal-head"><h3 id="modalTitle">New Transaction</h3><button class="x" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Property Address</label><input id="f_addr" class="inp" placeholder="123 Scenic Hwy 30A, Santa Rosa Beach, FL"></div>
+      <div class="field"><label>Client(s)</label><input id="f_clients" class="inp" placeholder="John & Jane Buyer"></div>
+      <div class="field"><label>Side</label>
+        <select id="f_side" class="inp"><option>Buyer</option><option>Seller</option><option>Dual</option></select></div>
+      <div class="field"><label>Price</label><input id="f_price" class="inp" placeholder="$750,000"></div>
+      <div class="field"><label>Stage</label>
+        <select id="f_stage" class="inp"></select></div>
+      <div class="field"><label>Contract / Effective Date</label><input id="f_contract" class="inp" type="date"></div>
+      <div class="field"><label>Inspection Deadline</label><input id="f_inspection" class="inp" type="date"></div>
+      <div class="field"><label>Appraisal Deadline</label><input id="f_appraisal" class="inp" type="date"></div>
+      <div class="field"><label>Financing / Loan Commitment</label><input id="f_financing" class="inp" type="date"></div>
+      <div class="field"><label>Closing Date</label><input id="f_closing" class="inp" type="date"></div>
+      <div class="field"><label>Lender / Co-op Agent (optional)</label><input id="f_contacts" class="inp" placeholder="Lender: Amy at Regions · Co-op: Bob Agent"></div>
+      <div class="field"><label>Notes (optional)</label><textarea id="f_notes" class="inp" rows="2" placeholder="Roof concern flagged; seller providing survey."></textarea></div>
+      <button class="btn full" onclick="saveDeal()">Save Transaction</button>
+      <button id="delBtn" class="btn ghost full" style="margin-top:8px;color:var(--red);border-color:#fecaca;display:none" onclick="deleteDeal()">Delete this transaction</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY_STORE='es_tc_apikey';
+const DEAL_STORE='es_tc_deals';
+const STAGES=['New','Under Contract','Inspection','Appraisal','Financing','Clear to Close','Closed'];
+let deals=[];
+let activeId=null;
+let editId=null;
+
+/* ---------- key handling ---------- */
+function saveKey(){
+  const k=document.getElementById('keyInput').value.trim();
+  if(!k){alert('Please paste your Anthropic API key, or choose "Skip for now".');return;}
+  localStorage.setItem(KEY_STORE,k);
+  boot();
+}
+function skipKey(){ localStorage.setItem(KEY_STORE,'__SKIP__'); boot(); }
+function editKey(){
+  const cur=localStorage.getItem(KEY_STORE)||'';
+  const k=prompt('Paste your Anthropic API key (leave blank to keep tracking-only):', cur==='__SKIP__'?'':cur);
+  if(k===null) return;
+  localStorage.setItem(KEY_STORE, k.trim()||'__SKIP__');
+  alert('Saved.');
+}
+function hasAI(){ const k=localStorage.getItem(KEY_STORE); return k && k!=='__SKIP__'; }
+
+/* ---------- storage ---------- */
+function loadDeals(){
+  try{ deals=JSON.parse(localStorage.getItem(DEAL_STORE))||[]; }catch(e){ deals=[]; }
+  if(deals.length===0){ deals=sampleDeals(); persist(); }
+}
+function persist(){ localStorage.setItem(DEAL_STORE, JSON.stringify(deals)); }
+
+function sampleDeals(){
+  const t=new Date();
+  const d=(days)=>{const x=new Date(t);x.setDate(x.getDate()+days);return x.toISOString().slice(0,10);};
+  return [
+    {id:uid(),addr:'82 Blue Mountain Rd, Santa Rosa Beach, FL 32459',clients:'The Harrisons',side:'Buyer',price:'$1,250,000',stage:'Inspection',
+     contract:d(-6),inspection:d(2),appraisal:d(9),financing:d(18),closing:d(27),
+     contacts:'Lender: Amy Reed, Regions · Co-op: Dana Lott',notes:'Buyers want dock condition confirmed during inspection.'},
+    {id:uid(),addr:'155 Emerald Cove Way, Miramar Beach, FL 32550',clients:'Priya & Sam Anand',side:'Seller',price:'$865,000',stage:'Financing',
+     contract:d(-14),inspection:d(-8),appraisal:d(-2),financing:d(4),closing:d(13),
+     contacts:'Co-op: Marcus Bell, Berkshire',notes:'Appraisal came in at value. Awaiting clear-to-close.'},
+    {id:uid(),addr:'2201 Scenic Gulf Dr #414, Destin, FL 32550',clients:'Robert Cole',side:'Buyer',price:'$540,000',stage:'Clear to Close',
+     contract:d(-22),inspection:d(-17),appraisal:d(-11),financing:d(-3),closing:d(3),
+     contacts:'Lender: First Federal · Title: Emerald Coast Title',notes:'Final walkthrough scheduled morning of closing.'}
+  ];
+}
+function uid(){ return 'd'+Math.abs(hashStr(STAGES.join()+deals.length+performance.now()+document.title)).toString(36); }
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return h;}
+
+/* ---------- rendering ---------- */
+function fmtDate(s){ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+function daysUntil(s){ if(!s) return null; const d=new Date(s+'T00:00:00'); const now=new Date(); now.setHours(0,0,0,0); return Math.round((d-now)/86400000); }
+function stagePill(stage){
+  if(stage==='Closed') return '<span class="pill green">Closed</span>';
+  if(stage==='Clear to Close') return '<span class="pill gold">Clear to Close</span>';
+  return '<span class="pill">'+stage+'</span>';
+}
+function nextDeadline(dl){
+  const items=[['Inspection',dl.inspection],['Appraisal',dl.appraisal],['Financing',dl.financing],['Closing',dl.closing]];
+  const fut=items.map(([n,d])=>({n,d,du:daysUntil(d)})).filter(x=>x.d && x.du!==null && x.du>=0).sort((a,b)=>a.du-b.du);
+  return fut[0]||null;
+}
+function renderList(){
+  const el=document.getElementById('dealList');
+  document.getElementById('dealCount').textContent=deals.length;
+  if(deals.length===0){ el.innerHTML='<div class="empty">No transactions yet.</div>'; return; }
+  el.innerHTML=deals.map(dl=>{
+    const nd=nextDeadline(dl);
+    let due='';
+    if(dl.stage==='Closed'){ due='<span class="due">Closed</span>'; }
+    else if(nd){ const warn=nd.du<=3; due='<span class="due '+(warn?'warn':'')+'">'+nd.n+' '+(nd.du===0?'today':'in '+nd.du+'d')+'</span>'; }
+    else { due='<span class="due">no upcoming deadline</span>'; }
+    return `<div class="deal ${dl.id===activeId?'active':''}" onclick="select('${dl.id}')">
+      <div class="addr">${escapeHtml(shortAddr(dl.addr))}</div>
+      <div class="cli">${escapeHtml(dl.clients||'')} · ${escapeHtml(dl.side||'')}</div>
+      <div class="row2">${stagePill(dl.stage)}${due}</div>
+    </div>`;
+  }).join('');
+}
+function shortAddr(a){ return (a||'').split(',')[0]; }
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function select(id){ activeId=id; renderList(); renderDetail(); }
+
+function renderDetail(){
+  const el=document.getElementById('detail');
+  const dl=deals.find(d=>d.id===activeId);
+  if(!dl){ el.innerHTML='<div class="empty"><div class="big">🌊</div>Select a transaction on the left, or add a new one.</div>'; return; }
+  const ci=STAGES.indexOf(dl.stage);
+  const stagesHtml=STAGES.map((s,i)=>{
+    const cls=i<ci?'done':(i===ci?'current':'');
+    return `<div class="stage ${cls}" onclick="setStage('${dl.id}',${i})">${s}</div>`;
+  }).join('');
+  const dates=[['Contract',dl.contract],['Inspection',dl.inspection],['Appraisal',dl.appraisal],['Financing',dl.financing],['Closing',dl.closing]];
+  const datesHtml=dates.map(([lbl,d])=>{
+    const du=daysUntil(d);
+    let cls='';
+    if(d && du!==null && lbl!=='Contract'){ if(du<0 && dl.stage!=='Closed') cls='overdue'; else if(du<=3) cls='soon'; }
+    let ddText=d?fmtDate(d):'not set';
+    if(d && du!==null){ ddText+= du<0?` · ${Math.abs(du)}d ago`:(du===0?' · today':` · in ${du}d`); }
+    return `<div class="drow ${cls}"><span class="dl">${lbl}</span><span class="dd">${ddText}</span></div>`;
+  }).join('');
+  el.innerHTML=`
+    <div class="detail-head">
+      <div class="addr">${escapeHtml(dl.addr)}</div>
+      <div class="meta">${escapeHtml(dl.clients||'')} · ${escapeHtml(dl.side||'')} side · ${escapeHtml(dl.price||'')}
+        <button class="btn ghost sm" style="margin-left:8px" onclick="openEdit('${dl.id}')">Edit</button></div>
+    </div>
+    <div class="stages">${stagesHtml}</div>
+    <div class="dates">
+      <div class="dtitle">Key Dates &amp; Deadlines</div>
+      ${datesHtml}
+      ${dl.contacts?`<div class="dtitle">Contacts</div><div class="field"><div class="val">${escapeHtml(dl.contacts)}</div></div>`:''}
+      ${dl.notes?`<div class="dtitle">Notes</div><div class="field"><div class="val">${escapeHtml(dl.notes)}</div></div>`:''}
+    </div>
+    <div class="ai">
+      <h4><span class="dot"></span>AI Coordinator ${hasAI()?'':'<span style="font-weight:400;color:var(--muted);font-size:12px">— add an API key to enable</span>'}</h4>
+      <div class="ai-actions">
+        <button class="btn sm" onclick="runAI('update')" ${hasAI()?'':'disabled style="opacity:.5"'}>Draft client status update</button>
+        <button class="btn sm" onclick="runAI('tasks')" ${hasAI()?'':'disabled style="opacity:.5"'}>Generate this week's tasks</button>
+        <button class="btn sm" onclick="runAI('coop')" ${hasAI()?'':'disabled style="opacity:.5"'}>Draft co-op / lender email</button>
+        <button class="btn sm ghost" onclick="runAI('next')" ${hasAI()?'':'disabled style="opacity:.5"'}>What happens next?</button>
+      </div>
+      <div id="aiOut" class="ai-out"></div>
+      <div id="aiBar" class="ai-bar"><button class="btn ghost sm" onclick="copyAI()">Copy</button></div>
+    </div>`;
+}
+function setStage(id,i){ const dl=deals.find(d=>d.id===id); if(!dl)return; dl.stage=STAGES[i]; persist(); renderList(); renderDetail(); }
+
+/* ---------- modal ---------- */
+function fillStageSelect(){ const s=document.getElementById('f_stage'); s.innerHTML=STAGES.map(x=>`<option>${x}</option>`).join(''); }
+function openNew(){
+  editId=null; document.getElementById('modalTitle').textContent='New Transaction';
+  document.getElementById('delBtn').style.display='none';
+  ['addr','clients','price','contract','inspection','appraisal','financing','closing','contacts','notes'].forEach(f=>document.getElementById('f_'+f).value='');
+  document.getElementById('f_side').value='Buyer'; document.getElementById('f_stage').value='New';
+  document.getElementById('modal').classList.add('show');
+}
+function openEdit(id){
+  const dl=deals.find(d=>d.id===id); if(!dl)return; editId=id;
+  document.getElementById('modalTitle').textContent='Edit Transaction';
+  document.getElementById('delBtn').style.display='block';
+  document.getElementById('f_addr').value=dl.addr||''; document.getElementById('f_clients').value=dl.clients||'';
+  document.getElementById('f_side').value=dl.side||'Buyer'; document.getElementById('f_price').value=dl.price||'';
+  document.getElementById('f_stage').value=dl.stage||'New';
+  document.getElementById('f_contract').value=dl.contract||''; document.getElementById('f_inspection').value=dl.inspection||'';
+  document.getElementById('f_appraisal').value=dl.appraisal||''; document.getElementById('f_financing').value=dl.financing||'';
+  document.getElementById('f_closing').value=dl.closing||''; document.getElementById('f_contacts').value=dl.contacts||'';
+  document.getElementById('f_notes').value=dl.notes||'';
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+function saveDeal(){
+  const g=f=>document.getElementById('f_'+f).value.trim();
+  if(!g('addr')){ alert('Property address is required.'); return; }
+  const rec={addr:g('addr'),clients:g('clients'),side:document.getElementById('f_side').value,price:g('price'),
+    stage:document.getElementById('f_stage').value,contract:g('contract'),inspection:g('inspection'),
+    appraisal:g('appraisal'),financing:g('financing'),closing:g('closing'),contacts:g('contacts'),notes:g('notes')};
+  if(editId){ const dl=deals.find(d=>d.id===editId); Object.assign(dl,rec); activeId=editId; }
+  else { rec.id=uid(); deals.unshift(rec); activeId=rec.id; }
+  persist(); closeModal(); renderList(); renderDetail();
+}
+function deleteDeal(){
+  if(!editId) return;
+  if(!confirm('Delete this transaction? This cannot be undone.')) return;
+  deals=deals.filter(d=>d.id!==editId); if(activeId===editId) activeId=deals[0]?deals[0].id:null;
+  persist(); closeModal(); renderList(); renderDetail();
+}
+
+/* ---------- AI ---------- */
+let lastAI='';
+function copyAI(){ navigator.clipboard.writeText(lastAI).then(()=>{}); }
+function dealContext(dl){
+  const lines=[
+    `Property: ${dl.addr}`,`Client(s): ${dl.clients} (${dl.side} side)`,`Price: ${dl.price}`,`Current stage: ${dl.stage}`,
+    `Contract date: ${dl.contract||'n/a'}`,`Inspection deadline: ${dl.inspection||'n/a'}`,`Appraisal deadline: ${dl.appraisal||'n/a'}`,
+    `Financing/loan commitment: ${dl.financing||'n/a'}`,`Closing date: ${dl.closing||'n/a'}`,
+    dl.contacts?`Contacts: ${dl.contacts}`:'', dl.notes?`Notes: ${dl.notes}`:'',
+    `Today's date: ${new Date().toISOString().slice(0,10)}`
+  ].filter(Boolean);
+  return lines.join('\n');
+}
+function aiPrompt(type,dl){
+  const ctx=dealContext(dl);
+  const maps={
+    update:`You are a transaction coordinator for the Emerald Shores Collection, a luxury real estate team on Florida's Emerald Coast (30A). Write a warm, professional, concise status-update email from the coordinator to the client(s) below. Cover where the deal stands, what was recently completed, what's next, and any action the client needs to take, with specific dates. Sign as "The Emerald Shores Collection Transaction Team". Do not invent facts beyond what's given.\n\nTRANSACTION:\n${ctx}`,
+    tasks:`You are a transaction coordinator for the Emerald Shores Collection on Florida's 30A. Based on the transaction below and today's date, produce a prioritized checklist of tasks to complete THIS WEEK to keep the deal on track and hit deadlines. Group by urgency (Overdue / Due this week / Coming up). Be specific to the stage and dates. Output as a clean checklist.\n\nTRANSACTION:\n${ctx}`,
+    coop:`You are a transaction coordinator for the Emerald Shores Collection on Florida's 30A. Draft a short, courteous, professional email to the co-operating agent and/or lender to move this transaction forward — request or confirm whatever is most time-sensitive given the stage and upcoming deadlines. Keep it under 150 words. If both a lender and co-op agent are relevant, note which recipient. Do not invent facts.\n\nTRANSACTION:\n${ctx}`,
+    next:`You are a transaction coordinator for the Emerald Shores Collection on Florida's 30A. In plain language for the agent, explain what happens next in this transaction: the immediate milestones, what could go wrong at this stage, and what to watch for, referencing the specific dates. Keep it tight and practical.\n\nTRANSACTION:\n${ctx}`
+  };
+  return maps[type];
+}
+async function runAI(type){
+  const dl=deals.find(d=>d.id===activeId); if(!dl) return;
+  if(!hasAI()){ alert('Add your Anthropic API key (button in the header) to use the AI coordinator.'); return; }
+  const out=document.getElementById('aiOut'), bar=document.getElementById('aiBar');
+  out.classList.add('show'); bar.classList.remove('show');
+  out.innerHTML='<span class="spin">Drafting…</span>';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':localStorage.getItem(KEY_STORE),
+        'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,
+        messages:[{role:'user',content:aiPrompt(type,dl)}]})
+    });
+    const data=await res.json();
+    if(data.error){ out.textContent='❌ '+data.error.message+'\n\n(If this mentions the model, open the API Key button — you may need to adjust the model name for your account.)'; return; }
+    lastAI=(data.content||[]).map(b=>b.text||'').join('')||'No response.';
+    out.textContent=lastAI; bar.classList.add('show');
+  }catch(e){
+    out.textContent='❌ Connection error: '+e.message+'\nCheck your API key and internet connection.';
+  }
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('app').style.display='block';
+  fillStageSelect(); loadDeals();
+  activeId=deals[0]?deals[0].id:null;
+  renderList(); renderDetail();
+}
+(function init(){
+  const k=localStorage.getItem(KEY_STORE);
+  if(k){ boot(); }
+})();
+</script>
+</body>
+</html>

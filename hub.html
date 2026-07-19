@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emerald Shores Collection — AI Content Hub</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal: #0B7A63;
+    --teal-dark: #085549;
+    --teal-light: #E1F5EE;
+    --gold: #C8973A;
+    --gold-light: #FBF4E8;
+    --sand: #F7F4EF;
+    --dark: #1A2B2A;
+    --text: #1f2937;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --border-focus: #0B7A63;
+    --bg: #ffffff;
+    --bg2: #f9fafb;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--sand);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  /* API KEY SETUP */
+  #setup-screen {
+    max-width: 480px;
+    margin: 60px auto;
+    background: var(--bg);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  .setup-header {
+    background: var(--dark);
+    padding: 28px 32px;
+    text-align: center;
+  }
+  .setup-logo { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 4px; }
+  .setup-logo span { color: var(--gold); }
+  .setup-sub { color: rgba(255,255,255,0.5); font-size: 13px; }
+  .setup-body { padding: 28px 32px; }
+  .setup-body h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .setup-body p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; }
+  .setup-body a { color: var(--teal); }
+  .setup-input {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-family: monospace;
+    margin-bottom: 12px;
+    outline: none; transition: border-color 0.15s;
+  }
+  .setup-input:focus { border-color: var(--border-focus); }
+  .setup-btn {
+    width: 100%; background: var(--teal); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    padding: 12px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .setup-btn:hover { background: var(--teal-dark); }
+  .setup-note {
+    margin-top: 14px; font-size: 11px; color: var(--text-muted);
+    background: var(--bg2); border-radius: var(--radius-sm);
+    padding: 10px 12px; line-height: 1.6;
+  }
+
+  /* MAIN APP */
+  #app { display: none; max-width: 860px; margin: 0 auto; }
+
+  .app-header {
+    background: var(--dark);
+    border-radius: 16px 16px 0 0;
+    padding: 18px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .app-logo { color: #fff; font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
+  .app-logo span { color: var(--gold); }
+  .api-status { font-size: 11px; background: rgba(200,151,58,0.18); color: var(--gold); border: 1px solid rgba(200,151,58,0.35); padding: 3px 12px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
+  .status-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; }
+
+  .tab-bar {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: flex; overflow-x: auto;
+  }
+  .tab {
+    padding: 13px 20px; font-size: 13px; font-weight: 500;
+    color: var(--text-muted); cursor: pointer; white-space: nowrap;
+    border-bottom: 2.5px solid transparent;
+    background: none; border-top: none; border-left: none; border-right: none;
+    display: flex; align-items: center; gap: 7px;
+    transition: color 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+  .tab svg { width: 15px; height: 15px; }
+
+  .tab-panel { display: none; background: #fff; border-radius: 0 0 16px 16px; padding: 24px; }
+  .tab-panel.active { display: block; }
+
+  /* FORM ELEMENTS */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 540px) { .form-row { grid-template-columns: 1fr; } }
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.07em; margin-bottom: 6px;
+  }
+  .form-select, .form-input, .form-textarea {
+    width: 100%; padding: 10px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--text);
+    font-family: inherit; background: var(--bg);
+    outline: none; transition: border-color 0.15s;
+    appearance: auto;
+  }
+  .form-select:focus, .form-input:focus, .form-textarea:focus { border-color: var(--border-focus); }
+  .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 5px 12px; border: 1.5px solid var(--border);
+    border-radius: 20px; font-size: 12px; font-weight: 500;
+    cursor: pointer; background: #fff; color: var(--text-muted);
+    transition: all 0.12s;
+  }
+  .chip.on { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+  .gen-btn {
+    width: 100%; background: var(--teal); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    padding: 13px; font-size: 14px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 8px; transition: background 0.15s;
+    font-family: inherit; margin-top: 4px;
+  }
+  .gen-btn:hover:not(:disabled) { background: var(--teal-dark); }
+  .gen-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* OUTPUT */
+  .output-wrap {
+    margin-top: 20px; border: 1.5px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; display: none;
+  }
+  .output-wrap.show { display: block; }
+  .output-toolbar {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 9px 14px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .output-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; }
+  .output-actions { display: flex; gap: 6px; }
+  .action-btn {
+    padding: 4px 12px; border: 1.5px solid var(--border);
+    border-radius: 20px; font-size: 11px; font-weight: 500;
+    cursor: pointer; background: #fff; color: var(--text-muted);
+    display: flex; align-items: center; gap: 4px; transition: all 0.12s;
+    font-family: inherit;
+  }
+  .action-btn:hover { background: var(--teal-light); border-color: var(--teal); color: var(--teal); }
+  .output-body {
+    padding: 18px 20px; font-size: 13px; line-height: 1.8;
+    color: var(--text); white-space: pre-wrap; min-height: 80px;
+  }
+
+  /* LOADING */
+  .loader { display: flex; gap: 5px; align-items: center; padding: 14px 0; }
+  .loader span {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--teal);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .loader span:nth-child(2) { animation-delay: 0.2s; }
+  .loader span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{transform:scale(0.5);opacity:0.35} 40%{transform:scale(1);opacity:1} }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--dark); color: #fff; padding: 9px 20px;
+    border-radius: 20px; font-size: 13px; font-weight: 500;
+    opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 9999;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .change-key {
+    font-size: 11px; color: var(--text-muted); cursor: pointer;
+    background: none; border: none; text-decoration: underline;
+    font-family: inherit; padding: 0;
+  }
+  .change-key:hover { color: var(--teal); }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-header">
+    <div class="setup-logo">Emerald Shores <span>Collection</span></div>
+    <div class="setup-sub">AI Content Hub</div>
+  </div>
+  <div class="setup-body">
+    <h2>Enter your Anthropic API key</h2>
+    <p>This key stays on your device — it's never sent anywhere except directly to Anthropic's API to generate your content.</p>
+    <input type="password" class="setup-input" id="api-key-input" placeholder="sk-ant-api03-..." />
+    <button class="setup-btn" onclick="startApp()">Launch Content Hub</button>
+    <div class="setup-note">
+      🔑 Get a free API key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key.<br><br>
+      Your key is saved locally in your browser so you only need to enter it once.
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="app-header">
+    <div class="app-logo">Emerald Shores <span>Collection</span> — AI Content Hub</div>
+    <div class="api-status"><span class="status-dot"></span> Claude connected</div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('social')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+      Social posts
+    </button>
+    <button class="tab" onclick="switchTab('email')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+      Email / SOI
+    </button>
+    <button class="tab" onclick="switchTab('calendar')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Content calendar
+    </button>
+    <button class="tab" onclick="switchTab('scripts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      Video scripts
+    </button>
+    <button class="tab" onclick="switchTab('referral')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Referral & SOI
+    </button>
+  </div>
+
+  <!-- SOCIAL POSTS -->
+  <div class="tab-panel active" id="panel-social">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Platform</label>
+        <select class="form-select" id="s-platform">
+          <option>Instagram Reel caption</option>
+          <option>TikTok video script</option>
+          <option>Facebook post</option>
+          <option>LinkedIn post</option>
+          <option>Instagram Story sequence</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Content type</label>
+        <select class="form-select" id="s-type">
+          <option>Listing showcase</option>
+          <option>Market update</option>
+          <option>Buyer tips</option>
+          <option>30A lifestyle / local</option>
+          <option>STR / investment angle</option>
+          <option>Team intro / trust building</option>
+          <option>Open house promo</option>
+          <option>Client testimonial spotlight</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Listing or topic details (optional)</label>
+      <textarea class="form-textarea" id="s-details" placeholder="e.g. 4BR home in WaterColor, $1.4M, gulf views, private pool, steps to beach access..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tone</label>
+        <select class="form-select" id="s-tone">
+          <option>Friendly & conversational</option>
+          <option>Luxury & aspirational</option>
+          <option>Educational / helpful</option>
+          <option>Exciting / high energy</option>
+          <option>Storytelling</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hashtags</label>
+        <select class="form-select" id="s-hashtags">
+          <option>Yes — 30A & local tags</option>
+          <option>Yes — broad real estate tags</option>
+          <option>Both local + broad</option>
+          <option>No hashtags</option>
+        </select>
+      </div>
+    </div>
+    <button class="gen-btn" id="s-btn" onclick="generate('social')">
+      ✦ Generate post
+    </button>
+    <div class="output-wrap" id="s-out">
+      <div class="output-toolbar">
+        <span class="output-label">Generated content</span>
+        <div class="output-actions">
+          <button class="action-btn" onclick="copyOut('s-body')">⎘ Copy</button>
+          <button class="action-btn" onclick="exportOut('s-body','social-post')">↓ Export</button>
+        </div>
+      </div>
+      <div class="output-body" id="s-body"></div>
+    </div>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="tab-panel" id="panel-email">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Email type</label>
+        <select class="form-select" id="e-type">
+          <option>Monthly market newsletter</option>
+          <option>Past client check-in</option>
+          <option>New listing announcement</option>
+          <option>Referral request</option>
+          <option>Out-of-state buyer intro</option>
+          <option>STR / investor opportunity</option>
+          <option>Open house invitation</option>
+          <option>Just sold announcement</option>
+          <option>Seasonal market update</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Audience</label>
+        <select class="form-select" id="e-audience">
+          <option>Past clients (SOI)</option>
+          <option>Warm leads</option>
+          <option>Cold / new leads</option>
+          <option>STR investors</option>
+          <option>Out-of-state buyers</option>
+          <option>Military / relocation</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Key info to include (optional)</label>
+      <textarea class="form-textarea" id="e-details" placeholder="e.g. Average days on market dropped to 18, two new luxury listings in WaterColor, client appreciation event July 12..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Length</label>
+        <select class="form-select" id="e-length">
+          <option>Short & punchy (150–200 words)</option>
+          <option>Standard (250–350 words)</option>
+          <option>Full newsletter (400–600 words)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tone</label>
+        <select class="form-select" id="e-tone">
+          <option>Warm & personal</option>
+          <option>Professional</option>
+          <option>Conversational friend</option>
+          <option>Luxury / elevated</option>
+        </select>
+      </div>
+    </div>
+    <button class="gen-btn" id="e-btn" onclick="generate('email')">
+      ✦ Generate email
+    </button>
+    <div class="output-wrap" id="e-out">
+      <div class="output-toolbar">
+        <span class="output-label">Generated email</span>
+        <div class="output-actions">
+          <button class="action-btn" onclick="copyOut('e-body')">⎘ Copy</button>
+          <button class="action-btn" onclick="exportOut('e-body','email')">↓ Export</button>
+        </div>
+      </div>
+      <div class="output-body" id="e-body"></div>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="tab-panel" id="panel-calendar">
+    <div class="form-group">
+      <label class="form-label">Platforms to include</label>
+      <div class="chip-group" id="cal-chips">
+        <button class="chip on" data-v="Instagram" onclick="toggleChip(this)">📸 Instagram</button>
+        <button class="chip on" data-v="TikTok" onclick="toggleChip(this)">🎵 TikTok</button>
+        <button class="chip on" data-v="Facebook" onclick="toggleChip(this)">👥 Facebook</button>
+        <button class="chip" data-v="Email newsletter" onclick="toggleChip(this)">📧 Email</button>
+        <button class="chip" data-v="YouTube" onclick="toggleChip(this)">▶️ YouTube</button>
+        <button class="chip" data-v="LinkedIn" onclick="toggleChip(this)">💼 LinkedIn</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Time period</label>
+        <select class="form-select" id="cal-period">
+          <option>This month</option>
+          <option>Next 4 weeks</option>
+          <option>Next 2 weeks (detailed)</option>
+          <option>July 2025</option>
+          <option>August 2025</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Posting frequency</label>
+        <select class="form-select" id="cal-freq">
+          <option>3x per week</option>
+          <option>5x per week (weekdays)</option>
+          <option>Daily</option>
+          <option>2x per week (light)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Events, campaigns, or themes this period</label>
+      <textarea class="form-textarea" id="cal-events" placeholder="e.g. Open house July 19, client appreciation July 26, back-to-school messaging, new WaterColor listing launching July 10..."></textarea>
+    </div>
+    <button class="gen-btn" id="cal-btn" onclick="generate('calendar')">
+      ✦ Generate content calendar
+    </button>
+    <div class="output-wrap" id="cal-out">
+      <div class="output-toolbar">
+        <span class="output-label">Content calendar</span>
+        <div class="output-actions">
+          <button class="action-btn" onclick="copyOut('cal-body')">⎘ Copy</button>
+          <button class="action-btn" onclick="exportOut('cal-body','content-calendar')">↓ Export</button>
+        </div>
+      </div>
+      <div class="output-body" id="cal-body"></div>
+    </div>
+  </div>
+
+  <!-- VIDEO SCRIPTS -->
+  <div class="tab-panel" id="panel-scripts">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Platform & length</label>
+        <select class="form-select" id="v-platform">
+          <option>TikTok (30–60 sec)</option>
+          <option>Instagram Reel (30–60 sec)</option>
+          <option>YouTube Short (under 60 sec)</option>
+          <option>YouTube long-form (5–10 min)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Topic</label>
+        <select class="form-select" id="v-topic">
+          <option>Neighborhood tour (30A / Santa Rosa Beach)</option>
+          <option>"Would you live here?" listing tour</option>
+          <option>Top 5 things to know before buying on 30A</option>
+          <option>STR investment opportunity on 30A</option>
+          <option>Monthly market update</option>
+          <option>Moving to the Florida Panhandle</option>
+          <option>WaterColor vs Alys Beach vs Rosemary Beach</option>
+          <option>Day in the life on 30A</option>
+          <option>Military relocation guide to the Emerald Coast</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Extra details</label>
+      <textarea class="form-textarea" id="v-details" placeholder="e.g. Focus on WaterColor community, mention beach access, Gulf views, highlight the $1.2M median price point..."></textarea>
+    </div>
+    <button class="gen-btn" id="v-btn" onclick="generate('scripts')">
+      ✦ Generate video script
+    </button>
+    <div class="output-wrap" id="v-out">
+      <div class="output-toolbar">
+        <span class="output-label">Video script</span>
+        <div class="output-actions">
+          <button class="action-btn" onclick="copyOut('v-body')">⎘ Copy</button>
+          <button class="action-btn" onclick="exportOut('v-body','video-script')">↓ Export</button>
+        </div>
+      </div>
+      <div class="output-body" id="v-body"></div>
+    </div>
+  </div>
+
+  <!-- REFERRAL & SOI -->
+  <div class="tab-panel" id="panel-referral">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Content type</label>
+        <select class="form-select" id="r-type">
+          <option>Referral request script (phone call)</option>
+          <option>Referral request text message</option>
+          <option>Post-closing follow-up message</option>
+          <option>1-year anniversary check-in</option>
+          <option>Client appreciation event invite</option>
+          <option>Google review request</option>
+          <option>SOI reactivation message</option>
+          <option>Handwritten note / card text</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Relationship</label>
+        <select class="form-select" id="r-rel">
+          <option>Past buyer client</option>
+          <option>Past seller client</option>
+          <option>Friend / personal contact</option>
+          <option>Business acquaintance</option>
+          <option>Neighbor / community member</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Client name & any personal details (optional)</label>
+      <textarea class="form-textarea" id="r-details" placeholder="e.g. John & Sarah — bought a WaterColor home in 2023, have kids, love the beach lifestyle. Haven't spoken in about 6 months."></textarea>
+    </div>
+    <button class="gen-btn" id="r-btn" onclick="generate('referral')">
+      ✦ Generate message
+    </button>
+    <div class="output-wrap" id="r-out">
+      <div class="output-toolbar">
+        <span class="output-label">Generated message</span>
+        <div class="output-actions">
+          <button class="action-btn" onclick="copyOut('r-body')">⎘ Copy</button>
+          <button class="action-btn" onclick="exportOut('r-body','referral-script')">↓ Export</button>
+        </div>
+      </div>
+      <div class="output-body" id="r-body"></div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top: 16px;">
+    <button class="change-key" onclick="changeKey()">Change API key</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const BRAND_SYSTEM = `You are the AI content creator for Emerald Shores Collection, a real estate team based in Santa Rosa Beach on Florida's scenic 30A / Emerald Coast.
+
+Key facts about the team and market:
+- Team name: Emerald Shores Collection
+- Location: Santa Rosa Beach, FL (30A corridor)
+- Market: luxury and lifestyle, turquoise water, white sand beaches
+- Communities: WaterColor, WaterSound, Seaside, Alys Beach, Grayton Beach, Rosemary Beach, Watersound Beach, Inlet Beach
+- Strong short-term rental (STR/Airbnb/VRBO) investment market — 30A is one of the top vacation rental markets in the US
+- Key buyer profiles: out-of-state second home buyers from TX, TN, IL, OH, GA; STR investors; military relocation from Eglin AFB and Hurlburt Field
+- Median price point: $1M–$2M+, with strong luxury and ultra-luxury segment
+
+Voice and tone:
+- Warm, knowledgeable local expert — not corporate or stuffy
+- Aspirational but authentic — the lifestyle sells itself, no need to oversell
+- Personal and relationship-driven — this is a referral-based business
+- Always specific to 30A, never generic real estate copy
+
+Always write content that sounds like it comes from a real, trusted local real estate team — not a template.`;
+
+// Storage
+const KEY_STORE = 'esc_api_key';
+
+function startApp() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-ant')) {
+    alert('Please enter a valid Anthropic API key starting with sk-ant');
+    return;
+  }
+  localStorage.setItem(KEY_STORE, key);
+  showApp();
+}
+
+function showApp() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+function changeKey() {
+  localStorage.removeItem(KEY_STORE);
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'block';
+  document.getElementById('api-key-input').value = '';
+}
+
+// Check for saved key on load
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem(KEY_STORE);
+  if (saved) showApp();
+});
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const tabs = ['social','email','calendar','scripts','referral'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function toggleChip(el) { el.classList.toggle('on'); }
+
+function getChips() {
+  return [...document.querySelectorAll('#cal-chips .chip.on')].map(c => c.dataset.v).join(', ');
+}
+
+function setLoading(prefix, loading) {
+  const btn = document.getElementById(prefix + '-btn');
+  const body = document.getElementById(prefix + '-body');
+  const out = document.getElementById(prefix + '-out');
+  btn.disabled = loading;
+  if (loading) {
+    out.classList.add('show');
+    body.innerHTML = '<div class="loader"><span></span><span></span><span></span></div>';
+  }
+}
+
+function val(id) { return document.getElementById(id)?.value || ''; }
+
+function buildPrompt(type) {
+  switch(type) {
+    case 'social':
+      return `Write a ${val('s-platform')} for Emerald Shores Collection.
+Content type: ${val('s-type')}
+Tone: ${val('s-tone')}
+Hashtags: ${val('s-hashtags')}
+${val('s-details') ? 'Details: ' + val('s-details') : ''}
+
+Requirements:
+- Open with a scroll-stopping hook
+- Keep it authentic to 30A — specific place names, lifestyle details
+- End with a clear, natural CTA
+- If it's a caption, format it ready to paste into the platform
+- If it's a TikTok script, format with [HOOK], [BODY], [CTA] and include on-screen text suggestions in brackets`;
+
+    case 'email':
+      return `Write a complete ${val('e-type')} email for Emerald Shores Collection.
+Audience: ${val('e-audience')}
+Tone: ${val('e-tone')}
+Length: ${val('e-length')}
+${val('e-details') ? 'Key info: ' + val('e-details') : ''}
+
+Format:
+Subject line: [write one]
+[blank line]
+[email body]
+[sign-off from the Emerald Shores Collection team]
+
+Make it feel like it's from a real person who knows the reader, not a mass blast.`;
+
+    case 'calendar':
+      return `Create a detailed content calendar for Emerald Shores Collection.
+Platforms: ${getChips() || 'Instagram, TikTok, Facebook'}
+Time period: ${val('cal-period')}
+Posting frequency: ${val('cal-freq')}
+${val('cal-events') ? 'Events/campaigns: ' + val('cal-events') : ''}
+
+Format as a week-by-week schedule. For each post include:
+- Day & date
+- Platform
+- Content type / theme
+- Hook or opening line idea
+- Caption direction (2–3 sentences)
+- CTA
+
+Mix content types throughout: listings, market stats, lifestyle/30A, buyer tips, investor content, team personality. Make every idea specific to the Emerald Coast — no generic real estate filler.`;
+
+    case 'scripts':
+      return `Write a complete video script for Emerald Shores Collection.
+Platform: ${val('v-platform')}
+Topic: ${val('v-topic')}
+${val('v-details') ? 'Details: ' + val('v-details') : ''}
+
+Format with clearly labeled sections:
+[HOOK — first 3 seconds, must stop the scroll]
+[BODY — main content with natural transitions]
+[CTA — what to do next]
+
+Include:
+- On-screen text / B-roll suggestions in [brackets]
+- Spoken words written naturally, like a real person talking to camera
+- Specific 30A references, place names, price points where relevant
+- Energy that matches the platform`;
+
+    case 'referral':
+      return `Write a ${val('r-type')} for Emerald Shores Collection.
+Relationship: ${val('r-rel')}
+${val('r-details') ? 'Client details: ' + val('r-details') : ''}
+
+Make it:
+- Warm and personal, not salesy or scripted-sounding
+- Specific to their situation if details were provided
+- Natural — something a real agent would actually say or write
+- Brief and easy to act on
+- End with a gentle, low-pressure ask
+
+If it's a phone script, include notes on tone and pauses. If it's a text, keep it short and casual.`;
+  }
+}
+
+async function generate(type) {
+  const prefixMap = { social:'s', email:'e', calendar:'cal', scripts:'v', referral:'r' };
+  const prefix = prefixMap[type];
+  const apiKey = localStorage.getItem(KEY_STORE);
+
+  if (!apiKey) { alert('No API key found. Please reload and enter your key.'); return; }
+
+  setLoading(prefix, true);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1200,
+        system: BRAND_SYSTEM,
+        messages: [{ role: 'user', content: buildPrompt(type) }]
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById(prefix + '-body').textContent = '❌ Error: ' + data.error.message;
+    } else {
+      const text = data.content?.map(b => b.text || '').join('') || 'No response received.';
+      document.getElementById(prefix + '-body').textContent = text;
+    }
+  } catch (err) {
+    document.getElementById(prefix + '-body').textContent = '❌ Connection error. Check your API key and internet connection.\n\n' + err.message;
+  }
+
+  setLoading(prefix, false);
+  document.getElementById(prefix + '-out').classList.add('show');
+}
+
+function copyOut(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard ✓'));
+}
+
+function exportOut(id, filename) {
+  const text = document.getElementById(id).textContent;
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'emerald-shores-' + filename + '-' + new Date().toISOString().slice(0,10) + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast('Exported ✓');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
